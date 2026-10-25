@@ -1,0 +1,138 @@
+.login-container {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 36px !important;
+    border-radius: 16px !important;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    color: #667eea;
+
+    mat-icon {
+        font-size: 2.25rem;
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+
+    h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        margin: 0;
+    }
+}
+
+h2 {
+    text-align: center;
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #222;
+}
+
+.subtitle {
+    text-align: center;
+    color: #777;
+    margin: 0 0 28px;
+    font-size: 0.9rem;
+}
+
+mat-form-field {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.submit-button {
+    height: 48px;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-top: 12px;
+    border-radius: 8px !important;
+
+    mat-spinner {
+        margin: 0 auto;
+    }
+}
+
+/* ── OR divider using flexbox ── */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e0e0e0;
+    }
+}
+
+.divider-text {
+    font-size: 0.8rem;
+    color: #999;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.google-button {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    border-radius: 8px !important;
+    border-color: #ddd !important;
+}
+
+.google-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.signup-link {
+    text-align: center;
+    margin-top: 20px;
+    color: #777;
+    font-size: 0.9rem;
+
+    a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 4px;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 16px;
+        align-items: flex-start;
+        padding-top: 40px;
+    }
+
+    .login-card {
+        padding: 28px 20px !important;
+    }
+}
