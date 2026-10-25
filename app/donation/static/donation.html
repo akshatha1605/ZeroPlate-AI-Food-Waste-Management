@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f6f3">
+  <title>ZeroPlate | Surplus donations</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    :root {
+      --ink:#182a27; --muted:#687873; --line:#dce6e0;
+      --bg:#f3f6f3; --paper:#fff; --green:#176b52;
+      --green-dark:#104d3c; --mint:#e8f3ed; --accent:#d87942;
+      --amber:#805313; --red:#a84035; --red-bg:#fff0ee;
+      --safe:#267650; --safe-bg:#e8f3ed; --urgent:#956000;
+      --urgent-bg:#fff4dc; --shadow:0 5px 18px rgba(24,42,39,.035);
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { min-height:68px; background:#fff; border-bottom:1px solid var(--line); padding:0 max(24px,calc((100% - 1240px)/2)); display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { font-size:22px; font-weight:850; letter-spacing:-.8px; white-space:nowrap; }
+    .brand span { color:var(--green); }
+    .header-right { display:flex; align-items:center; gap:14px; color:var(--muted); font-size:12px; }
+    .live-dot { width:8px; height:8px; border-radius:50%; display:inline-block; background:#3d9866; margin-right:6px; box-shadow:0 0 0 3px #e4f3e9; }
+    main { max-width:1240px; margin:28px auto 0; padding:0 24px 44px; }
+    .intro { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; margin-bottom:20px; }
+    h1 { margin:0 0 5px; font-size:29px; line-height:1.2; letter-spacing:-.8px; }
+    p { margin:0; color:var(--muted); }
+    .summary { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .summary-item { min-width:92px; padding:8px 11px; background:#fff; border:1px solid var(--line); border-radius:8px; }
+    .summary-item small { display:block; color:var(--muted); font-size:10px; }
+    .summary-item strong { font-size:16px; }
+    .layout { display:grid; grid-template-columns:minmax(330px,.88fr) minmax(0,1.12fr); align-items:start; gap:18px; }
+    .stack { display:grid; gap:16px; min-width:0; }
+    .card { min-width:0; padding:19px; background:var(--paper); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); }
+    .card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+    h2 { margin:0; font-size:16px; letter-spacing:-.2px; }
+    h3 { margin:0; font-size:14px; }
+    .eyebrow { display:block; margin-bottom:3px; color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; }
+    .muted { color:var(--muted); }
+    .tiny { font-size:11px; }
+    label { display:block; margin:12px 0 5px; font-size:12px; font-weight:750; }
+    input,select,textarea { width:100%; min-width:0; padding:10px 11px; border:1px solid #d5e0d9; border-radius:7px; color:var(--ink); background:#fff; font:inherit; }
+    input:focus,select:focus,textarea:focus { outline:3px solid #d5e9de; border-color:var(--green); }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+    .form-grid .full { grid-column:1/-1; }
+    .actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    button { min-height:36px; padding:8px 12px; border:0; border-radius:7px; font:inherit; font-size:12px; font-weight:800; cursor:pointer; transition:filter .14s,transform .14s; }
+    button:hover:not(:disabled) { filter:brightness(.96); }
+    button:active:not(:disabled) { transform:translateY(1px); }
+    button:disabled { opacity:.52; cursor:not-allowed; }
+    .primary { color:#fff; background:var(--green); }
+    .secondary { color:#29463b; background:#edf2ee; }
+    .danger { color:#8c3028; background:#fff0ee; }
+    .small-button { min-height:30px; padding:6px 9px; font-size:11px; }
+    .notice { display:none; margin:12px 0 0; padding:10px 12px; border-radius:7px; font-size:12px; overflow-wrap:anywhere; }
+    .notice.show { display:block; }
+    .notice.error { color:#8d2f25; background:#fff0ee; border:1px solid #f1d2cc; }
+    .notice.success { color:#205c3d; background:#eaf5ed; border:1px solid #d3e8d9; }
+    .notice.info { color:#72500d; background:#fff6df; border:1px solid #f1e2b8; }
+    .batch-list,.match-list,.inbox-list { display:grid; gap:8px; }
+    .batch-item,.match-item,.inbox-item { border:1px solid #e2eae4; border-radius:8px; background:#fff; padding:11px 12px; min-width:0; }
+    .batch-item.selected,.match-item.selected,.inbox-item.selected { border-color:#73a88c; box-shadow:0 0 0 2px #e5f1e9; }
+    .item-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .item-title { font-weight:800; font-size:13px; overflow-wrap:anywhere; }
+    .item-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; color:var(--muted); font-size:11px; }
+    .status-pill { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:3px 8px; font-size:10px; line-height:1.4; font-weight:850; white-space:nowrap; }
+    .state-safe { color:var(--safe); background:var(--safe-bg); }
+    .state-urgent { color:var(--urgent); background:var(--urgent-bg); }
+    .state-expired { color:var(--red); background:var(--red-bg); }
+    .state-other { color:#53665d; background:#edf2ee; }
+    .item-bottom { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; }
+    .countdown { font-variant-numeric:tabular-nums; font-size:12px; font-weight:800; }
+    .countdown.safe { color:var(--safe); }
+    .countdown.urgent { color:var(--urgent); }
+    .countdown.expired { color:var(--red); }
+    .empty { padding:18px 5px; color:var(--muted); font-size:12px; text-align:center; }
+    .scroll-list { max-height:340px; overflow:auto; padding-right:2px; }
+    .split { display:grid; grid-template-columns:minmax(0,1fr) minmax(270px,.86fr); gap:16px; align-items:start; }
+    .match-reason { margin-top:6px; color:var(--muted); font-size:11px; line-height:1.45; }
+    .match-score { font-size:13px; font-weight:900; color:var(--green); white-space:nowrap; }
+    .inbox-meta { font-size:11px; color:var(--muted); margin-top:3px; }
+    .tracker { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; margin:15px 0; }
+    .track-step { text-align:center; position:relative; color:#899690; font-size:10px; font-weight:750; }
+    .track-step::before { content:""; display:block; height:5px; border-radius:5px; margin-bottom:6px; background:#e6ece8; }
+    .track-step.done::before { background:var(--green); }
+    .track-step.current { color:var(--green-dark); }
+    .donation-detail { padding:10px 11px; background:#f6faf7; border:1px solid #e2ebe5; border-radius:8px; }
+    .map-wrap { overflow:hidden; border:1px solid var(--line); border-radius:8px; background:#edf2ee; }
+    #routeMap { height:290px; width:100%; z-index:0; }
+    .map-caption { min-height:34px; padding:8px 10px; background:#fff; color:var(--muted); font-size:11px; }
+    .map-unavailable { display:grid; place-items:center; height:290px; padding:18px; color:var(--muted); text-align:center; font-size:12px; }
+    .section-rule { height:1px; border:0; background:#edf1ee; margin:14px 0; }
+    .refresh { white-space:nowrap; }
+    @media(max-width:960px) { .layout { grid-template-columns:minmax(300px,.9fr) minmax(0,1.1fr); } .split { grid-template-columns:1fr; } }
+    @media(max-width:760px) { header { min-height:62px; padding:0 17px; } main { margin-top:20px; padding:0 15px 30px; } .intro { display:block; } .summary { justify-content:flex-start; margin-top:14px; } .layout { grid-template-columns:1fr; } .card { padding:16px; } h1 { font-size:26px; } #routeMap,.map-unavailable { height:245px; } }
+    @media(max-width:420px) { .form-grid { grid-template-columns:1fr; } .form-grid .full { grid-column:auto; } .summary-item { flex:1; min-width:78px; } .tracker { gap:3px; } .track-step { font-size:9px; } .item-top { gap:6px; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">Zero<span>Plate</span></div>
+  <div class="header-right"><span><i class="live-dot"></i>Donation operations</span><span id="clock"></span></div>
+</header>
+<main>
+  <section class="intro">
+    <div><span class="eyebrow">Surplus redistribution</span><h1>Donation coordination</h1><p>Register safe surplus, find a nearby collection partner, and track each handover.</p></div>
+    <div class="summary" aria-label="Batch summary">
+      <div class="summary-item"><small>Available</small><strong id="availableCount">0</strong></div>
+      <div class="summary-item"><small>Urgent</small><strong id="urgentCount">0</strong></div>
+      <div class="summary-item"><small>Expired</small><strong id="expiredCount">0</strong></div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <div class="stack">
+      <section class="card">
+        <div class="card-head"><div><span class="eyebrow">Kitchen</span><h2>Register a surplus batch</h2></div></div>
+        <form id="batchForm">
+          <div class="form-grid">
+            <div class="full"><label for="dishName">Food or dish name</label><input id="dishName" name="dish_name" maxlength="200" required placeholder="e.g. Vegetable rice"></div>
+            <div><label for="quantity">Quantity (grams)</label><input id="quantity" name="quantity_grams" type="number" min="1" max="1000000" step="1" required placeholder="1200"></div>
+            <div><label for="category">Food category</label><select id="category" name="category" required><option value="hot">Hot held</option><option value="chilled">Chilled</option><option value="room_temp">Room temperature</option></select></div>
+            <div><label for="diet">Dietary type</label><select id="diet" name="dietary_type"><option value="veg">Vegetarian</option><option value="vegan">Vegan</option><option value="non-veg">Non-vegetarian</option></select></div>
+            <div><label for="preparedTime">Prepared at</label><input id="preparedTime" type="datetime-local"></div>
+            <div class="full"><label for="allergens">Allergen information</label><input id="allergens" maxlength="500" placeholder="e.g. Contains peanuts, dairy"></div>
+          </div>
+          <div class="actions"><button class="primary" id="registerButton" type="submit">Register batch</button><span class="tiny muted">Safety deadlines are calculated by the server.</span></div>
+        </form>
+        <div class="notice" id="formNotice" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><span class="eyebrow">Kitchen inventory</span><h2>Surplus batches</h2></div><button class="secondary small-button refresh" id="refreshBatches" type="button">Refresh</button></div>
+        <div class="scroll-list batch-list" id="batchList"><div class="empty">Loading batches…</div></div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="card">
+        <div class="card-head"><div><span class="eyebrow">Partner selection</span><h2 id="matchesTitle">NGO matches</h2></div><span class="status-pill state-other" id="selectedBatchState">Select a batch</span></div>
+        <p class="tiny muted" id="matchesHint">Select a batch to compare category, capacity, distance, and pickup time.</p>
+        <div class="match-list scroll-list" id="matchesList"><div class="empty">No batch selected.</div></div>
+        <div class="notice" id="matchNotice" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><span class="eyebrow">NGO desk</span><h2>Offers and status</h2></div><button class="secondary small-button refresh" id="refreshDonations" type="button">Refresh</button></div>
+        <div class="split">
+          <div>
+            <h3>Offer inbox</h3>
+            <p class="tiny muted" style="margin:3px 0 9px">Accept or reject a matched batch.</p>
+            <div class="inbox-list scroll-list" id="inboxList"><div class="empty">Loading offers…</div></div>
+          </div>
+          <div>
+            <h3>Handover tracker</h3>
+            <p class="tiny muted" style="margin:3px 0 9px">Choose an offer to update its progress.</p>
+            <div class="donation-detail" id="donationDetail"><div class="empty">Select an offer to view its timeline.</div></div>
+            <div class="tracker" id="statusTracker" aria-label="Donation progress">
+              <div class="track-step" data-step="MATCHED">Matched</div><div class="track-step" data-step="ACCEPTED">Accepted</div><div class="track-step" data-step="PICKED_UP">Picked up</div><div class="track-step" data-step="DELIVERED">Delivered</div>
+            </div>
+            <div class="actions" id="progressActions"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><span class="eyebrow">Collection</span><h2>Pickup route and ETA</h2></div><span class="tiny muted" id="routeEta">Select an offer</span></div>
+        <div class="map-wrap"><div id="routeMap"></div></div>
+        <div class="map-caption" id="mapCaption">A route will appear when an offer is selected.</div>
+        <div class="notice" id="pageNotice" role="status" aria-live="polite"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const API = '/api/donation';
+  const $ = (id) => document.getElementById(id);
+  let batches = [];
+  let donations = [];
+  let selectedBatchId = null;
+  let selectedDonationId = null;
+  const batchTimerIntervals = new Map();
+  let map = null;
+  let routeLayer = null;
+  let mapMarkers = null;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  }
+  async function request(path, options = {}) {
+    const response = await fetch(`${API}${path}`, {headers:{'Content-Type':'application/json', ...(options.headers || {})}, ...options});
+    let data = {};
+    try { data = await response.json(); } catch { data = {}; }
+    if (!response.ok) {
+      const detail = data.detail;
+      const message = Array.isArray(detail) ? detail.map(error => error.msg).join('; ') : (detail || data.message || `Request failed (${response.status})`);
+      throw new Error(message);
+    }
+    return data;
+  }
+  function notice(element, message, type = 'info') {
+    element.className = `notice show ${type}`;
+    element.textContent = message;
+  }
+  function clearNotice(element) { element.className = 'notice'; element.textContent = ''; }
+  function stateClass(state) { return state === 'safe' ? 'state-safe' : state === 'urgent' ? 'state-urgent' : state === 'expired' ? 'state-expired' : 'state-other'; }
+  function timeRemaining(safeUntil) {
+    const seconds = Math.max(0, Math.floor((new Date(safeUntil).getTime() - Date.now()) / 1000));
+    if (!Number.isFinite(seconds) || seconds <= 0) return {seconds:0, text:'Expired', state:'expired'};
+    const state = seconds < 3600 ? 'urgent' : 'safe';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const rest = seconds % 60;
+    return {seconds, text: hours ? `${hours}h ${minutes}m ${rest}s` : `${minutes}m ${rest}s`, state};
+  }
+  function isSafetyActive(batch) {
+    return ['AVAILABLE', 'MATCHED', 'ACCEPTED'].includes(String(batch.status).toUpperCase());
+  }
+  function clearBatchTimers() {
+    for (const intervalId of batchTimerIntervals.values()) clearInterval(intervalId);
+    batchTimerIntervals.clear();
+  }
+  function startBatchTimer(batch) {
+    const intervalId = setInterval(() => {
+      const row = document.querySelector(`[data-batch="${batch.id}"]`);
+      const timer = row?.querySelector('[data-countdown-batch]');
+      if (!row || !timer) {
+        clearInterval(intervalId);
+        batchTimerIntervals.delete(batch.id);
+        return;
+      }
+      const remaining = timeRemaining(batch.safe_until);
+      timer.textContent = remaining.text;
+      timer.className = `countdown ${remaining.state}`;
+      const badge = row.querySelector('[data-safety-badge]');
+      if (badge) {
+        badge.className = `status-pill ${stateClass(remaining.state)}`;
+        badge.textContent = remaining.state === 'safe' ? 'Safe' : remaining.state === 'urgent' ? 'Urgent' : 'Expired';
+      }
+      if (remaining.state === 'expired') {
+        const button = row.querySelector('[data-select-batch]');
+        if (button) { button.disabled = true; button.textContent = 'Expired'; }
+        clearInterval(intervalId);
+        batchTimerIntervals.delete(batch.id);
+      }
+    }, 1000);
+    batchTimerIntervals.set(batch.id, intervalId);
+  }
+  async function loadBatches() {
+    const data = await request('/batches');
+    batches = data.batches || [];
+    renderBatches();
+    updateSummary();
+    if (selectedBatchId && !batches.some(batch => batch.id === selectedBatchId)) selectedBatchId = null;
+    if (selectedBatchId) await selectBatch(selectedBatchId, false);
+  }
+  function updateSummary() {
+    const activeBatches = batches.filter(isSafetyActive);
+    const states = activeBatches.map(batch => timeRemaining(batch.safe_until).state);
+    $('availableCount').textContent = activeBatches.filter(batch => batch.can_donate && timeRemaining(batch.safe_until).state === 'safe').length;
+    $('urgentCount').textContent = states.filter(state => state === 'urgent').length;
+    $('expiredCount').textContent = batches.filter(batch => String(batch.status).toUpperCase() === 'EXPIRED' || (isSafetyActive(batch) && timeRemaining(batch.safe_until).state === 'expired')).length;
+  }
+  function renderBatches() {
+    clearBatchTimers();
+    if (!batches.length) { $('batchList').innerHTML = '<div class="empty">No surplus batches yet. Register one above to begin matching.</div>'; return; }
+    $('batchList').innerHTML = batches.map(batch => {
+      const active = isSafetyActive(batch);
+      const status = String(batch.status).toUpperCase();
+      const remaining = active ? timeRemaining(batch.safe_until) : null;
+      if (active) startBatchTimer(batch);
+      const state = active ? remaining.state : status.toLowerCase();
+      const label = status === 'PICKED_UP' ? 'Picked up' : status === 'DELIVERED' ? 'Delivered' : status === 'REJECTED' ? 'Rejected' : status === 'EXPIRED' || remaining?.state === 'expired' ? 'Expired' : remaining?.state === 'urgent' ? 'Urgent' : 'Safe';
+      const badgeClass = active ? stateClass(remaining.state) : 'state-other';
+      const terminal = !active;
+      return `<article class="batch-item ${batch.id === selectedBatchId ? 'selected' : ''}" data-batch="${batch.id}">
+        <div class="item-top"><div><div class="item-title">${escapeHtml(batch.dish_name)}</div><div class="item-meta"><span>${(Number(batch.quantity_grams)/1000).toFixed(2)} kg</span><span>${escapeHtml(batch.category || batch.storage_condition)}</span><span>${escapeHtml(batch.status)}</span></div></div><span class="status-pill ${badgeClass}" data-safety-badge>${escapeHtml(label)}</span></div>
+        <div class="item-bottom">${terminal ? `<span class="status-pill state-other">${escapeHtml(label)}</span>` : `<span class="countdown ${state}" data-countdown-batch="${batch.id}">${remaining.text}</span>`}<button class="secondary small-button" type="button" data-select-batch="${batch.id}" ${terminal || remaining.state === 'expired' ? 'disabled' : ''}>${terminal ? escapeHtml(label) : remaining.state === 'expired' ? 'Expired' : 'Find NGOs'}</button></div>
+      </article>`;
+    }).join('');
+    $('batchList').querySelectorAll('[data-select-batch]').forEach(button => button.addEventListener('click', () => selectBatch(Number(button.dataset.selectBatch))));
+  }
+  async function selectBatch(batchId, reload = true) {
+    selectedBatchId = batchId;
+    const batch = batches.find(item => item.id === batchId);
+    renderBatches();
+    if (!batch) return;
+    $('matchesTitle').textContent = `Matches for ${batch.dish_name}`;
+    $('selectedBatchState').textContent = batch.safety_state;
+    $('selectedBatchState').className = `status-pill ${stateClass(batch.safety_state)}`;
+    $('matchesHint').textContent = `${(Number(batch.quantity_grams)/1000).toFixed(2)} kg · safe until ${new Date(batch.safe_until).toLocaleString()}`;
+    clearNotice($('matchNotice'));
+    if (timeRemaining(batch.safe_until).state === 'expired') {
+      $('matchesList').innerHTML = '<div class="empty">This batch has expired and cannot be offered.</div>';
+      return;
+    }
+    if (reload) $('matchesList').innerHTML = '<div class="empty">Finding eligible collection partners…</div>';
+    try {
+      const data = await request(`/batches/${batchId}/matches`);
+      renderMatches(data.matches || []);
+      if (!data.matches?.length) $('matchesHint').textContent = data.message || 'No active NGO matches were found for this batch.';
+    } catch (error) { notice($('matchNotice'), error.message, 'error'); $('matchesList').innerHTML = '<div class="empty">Matches could not be loaded.</div>'; }
+  }
+  function renderMatches(matches) {
+    if (!matches.length) { $('matchesList').innerHTML = '<div class="empty">No NGO matches available for this batch.</div>'; return; }
+    $('matchesList').innerHTML = matches.map(match => `<article class="match-item">
+      <div class="item-top"><div><div class="item-title">${escapeHtml(match.ngo.name)}${match.ngo.is_sample ? ' <span class="muted tiny">· sample</span>' : ''}</div><div class="item-meta"><span>${Number(match.distance_km).toFixed(1)} km</span><span>ETA ${match.eta_minutes} min</span><span>${escapeHtml(match.ngo.open_time)}–${escapeHtml(match.ngo.close_time)}</span></div></div><span class="match-score">${Number(match.score).toFixed(0)} pts</span></div>
+      <div class="match-reason">${escapeHtml(match.reason)}</div>
+      <div class="item-bottom"><span class="status-pill ${match.eligible ? 'state-safe' : 'state-other'}">${match.eligible ? 'Eligible' : 'Not feasible'}</span><button class="primary small-button" type="button" data-offer="${match.ngo.id}" ${match.eligible ? '' : 'disabled'}>Offer to NGO</button></div>
+    </article>`).join('');
+    $('matchesList').querySelectorAll('[data-offer]').forEach(button => button.addEventListener('click', () => offerToNgo(Number(button.dataset.offer), button)));
+  }
+  async function offerToNgo(ngoId, button) {
+    const batchId = selectedBatchId;
+    if (!batchId) return;
+    button.disabled = true;
+    try {
+      const result = await request('/donations', {method:'POST', body:JSON.stringify({batch_id:batchId, ngo_id:ngoId})});
+      notice($('matchNotice'), 'Offer sent to the NGO inbox.', 'success');
+      await loadDonations(result.donation.id);
+      await loadBatches();
+    } catch (error) { button.disabled = false; notice($('matchNotice'), error.message, 'error'); }
+  }
+  async function loadDonations(preferId = selectedDonationId) {
+    const data = await request('/donations?limit=100');
+    donations = data.donations || [];
+    renderInbox();
+    const target = donations.find(item => item.id === preferId) || donations[0];
+    if (target) await selectDonation(target.id, false);
+    else { selectedDonationId = null; $('donationDetail').innerHTML = '<div class="empty">No NGO offers yet. Select an eligible match and send an offer.</div>'; $('progressActions').innerHTML = ''; renderTracker(null); }
+  }
+  function renderInbox() {
+    if (!donations.length) { $('inboxList').innerHTML = '<div class="empty">No offers yet.</div>'; return; }
+    $('inboxList').innerHTML = donations.map(donation => `<article class="inbox-item ${donation.id === selectedDonationId ? 'selected' : ''}" data-open-donation="${donation.id}">
+      <div class="item-top"><div><div class="item-title">${escapeHtml(donation.batch?.dish_name || `Batch ${donation.batch_id}`)}</div><div class="inbox-meta">${escapeHtml(donation.ngo?.name || 'NGO')} · ${Number(donation.batch?.quantity_grams || 0).toLocaleString()} g</div></div><span class="status-pill ${stateClass(String(donation.status).toLowerCase())}">${escapeHtml(donation.status.replaceAll('_',' '))}</span></div>
+      ${donation.status === 'MATCHED' ? `<div class="actions"><button class="primary small-button" data-accept="${donation.id}" type="button">Accept</button><button class="danger small-button" data-reject="${donation.id}" type="button">Reject</button></div>` : ''}
+    </article>`).join('');
+    $('inboxList').querySelectorAll('[data-open-donation]').forEach(item => item.addEventListener('click', event => { if (!event.target.closest('button')) selectDonation(Number(item.dataset.openDonation)); }));
+    $('inboxList').querySelectorAll('[data-accept]').forEach(button => button.addEventListener('click', () => mutateDonation(button.dataset.accept, 'accept')));
+    $('inboxList').querySelectorAll('[data-reject]').forEach(button => button.addEventListener('click', () => mutateDonation(button.dataset.reject, 'reject')));
+  }
+  async function selectDonation(donationId, refresh = true) {
+    selectedDonationId = Number(donationId);
+    const donation = donations.find(item => item.id === selectedDonationId);
+    renderInbox();
+    if (!donation) return;
+    if (refresh) {
+      try { const detail = await request(`/donations/${donationId}`); Object.assign(donation, detail.donation); }
+      catch (error) { notice($('pageNotice'), error.message, 'error'); }
+    }
+    const batch = donation.batch;
+    $('donationDetail').innerHTML = `<div class="item-title">${escapeHtml(batch?.dish_name || 'Donation')} <span class="status-pill ${stateClass(String(donation.status).toLowerCase())}">${escapeHtml(donation.status.replaceAll('_',' '))}</span></div><div class="inbox-meta">Offer #${donation.id} · ${escapeHtml(donation.ngo?.name || 'NGO')}</div>${(donation.history || []).map(event => `<div class="inbox-meta">${escapeHtml(event.status.replaceAll('_',' '))} · ${new Date(event.created_at).toLocaleString()}</div>`).join('')}`;
+    renderTracker(donation.status);
+    renderProgressActions(donation);
+    await loadRoute(donationId);
+  }
+  function renderTracker(status) {
+    const sequence = ['MATCHED','ACCEPTED','PICKED_UP','DELIVERED'];
+    const index = sequence.indexOf(status);
+    document.querySelectorAll('.track-step').forEach(step => {
+      const stepIndex = sequence.indexOf(step.dataset.step);
+      step.classList.toggle('done', index >= stepIndex && index >= 0);
+      step.classList.toggle('current', index === stepIndex);
+    });
+  }
+  function renderProgressActions(donation) {
+    const actions = $('progressActions');
+    if (donation.status === 'ACCEPTED') actions.innerHTML = '<button class="primary small-button" data-progress="PICKED_UP" type="button">Mark picked up</button>';
+    else if (donation.status === 'PICKED_UP') actions.innerHTML = '<button class="primary small-button" data-progress="DELIVERED" type="button">Mark delivered</button>';
+    else actions.innerHTML = '';
+    actions.querySelector('[data-progress]')?.addEventListener('click', event => mutateDonation(donation.id, 'status', event.currentTarget.dataset.progress));
+  }
+  async function mutateDonation(id, action, status) {
+    try {
+      let endpoint = `/donations/${id}/${action}`;
+      const options = {method:'POST'};
+      if (action === 'reject') options.body = JSON.stringify({status_notes:'Declined by NGO coordinator.'});
+      if (action === 'status') options.body = JSON.stringify({status});
+      const result = await request(endpoint, options);
+      notice($('pageNotice'), `Offer updated: ${result.donation.status.replaceAll('_',' ').toLowerCase()}.`, 'success');
+      await loadDonations(id);
+      await loadBatches();
+    } catch (error) { notice($('pageNotice'), error.message, 'error'); }
+  }
+  async function loadRoute(donationId) {
+    $('routeEta').textContent = 'Loading route…';
+    try {
+      const data = await request(`/donations/${donationId}/route`);
+      const route = data.route;
+      $('routeEta').textContent = `${route.eta_minutes} min ETA`;
+      $('mapCaption').textContent = route.is_estimate ? route.estimate_label : `${route.distance_km} km by road · OSRM route`;
+      drawRoute(route);
+    } catch (error) { $('routeEta').textContent = 'Unavailable'; $('mapCaption').textContent = error.message; }
+  }
+  function drawRoute(route) {
+    if (!window.L) { $('routeMap').outerHTML = '<div class="map-unavailable">The map library could not load. Route data is still available in the route endpoint.</div>'; return; }
+    if (!map) {
+      map = L.map('routeMap', {scrollWheelZoom:false}).setView([11.0168,76.9558], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
+      routeLayer = L.layerGroup().addTo(map);
+    }
+    routeLayer.clearLayers();
+    const points = route.waypoints_latlng || [];
+    if (!points.length) return;
+    const line = L.polyline(points, {color:'#176b52',weight:5,opacity:.84}).addTo(routeLayer);
+    L.marker(points[0]).bindPopup(`Pickup: ${escapeHtml(route.origin.name)}`).addTo(routeLayer);
+    L.marker(points[points.length - 1]).bindPopup(`Drop-off: ${escapeHtml(route.destination.name)}`).addTo(routeLayer);
+    map.fitBounds(line.getBounds().pad(.22), {maxZoom:14});
+    setTimeout(() => map.invalidateSize(), 80);
+  }
+  $('batchForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    clearNotice($('formNotice'));
+    $('registerButton').disabled = true;
+    const preparedValue = $('preparedTime').value;
+    const body = {
+      dish_name:$('dishName').value.trim(),
+      quantity_grams:Number($('quantity').value),
+      category:$('category').value,
+      dietary_type:$('diet').value,
+      allergen_info:$('allergens').value.trim()
+    };
+    if (preparedValue) body.prepared_time = new Date(preparedValue).toISOString();
+    try {
+      const result = await request('/batches', {method:'POST', body:JSON.stringify(body)});
+      notice($('formNotice'), result.message || 'Batch registered.', 'success');
+      $('batchForm').reset();
+      selectedBatchId = result.id;
+      await loadBatches();
+      await selectBatch(result.id);
+    } catch (error) { notice($('formNotice'), error.message || 'Could not register this batch. Please check the details and try again.', 'error'); }
+    finally { $('registerButton').disabled = false; }
+  });
+  $('refreshBatches').addEventListener('click', () => loadBatches().catch(error => notice($('formNotice'), error.message, 'error')));
+  $('refreshDonations').addEventListener('click', () => loadDonations().catch(error => notice($('pageNotice'), error.message, 'error')));
+  async function refreshAll() {
+    try { await Promise.all([loadBatches(), loadDonations()]); }
+    catch (error) { notice($('pageNotice'), `Could not load donation data: ${error.message}`, 'error'); }
+  }
+  setInterval(() => {
+    updateSummary();
+    $('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }, 1000);
+  $('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  refreshAll();
+</script>
+</body>
+</html>
