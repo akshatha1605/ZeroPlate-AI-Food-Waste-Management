@@ -1,4 +1,4 @@
-# 🍽️ ZeroPlate — Food Waste Redistribution Platform
+#  ZeroPlate — Food Waste Redistribution Platform 🍽️
 
 ZeroPlate is a **production-grade, full-stack platform** designed to reduce food waste by connecting **food donors (restaurants)**, **receivers (NGOs)**, **volunteers**, and **admins** using **secure authentication, intelligent matching, logistics optimization, analytics, and background processing**.
 
