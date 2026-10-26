@@ -139,7 +139,7 @@ EMAIL_USER=your_gmail_address
 EMAIL_PASSWORD=your_gmail_app_password
 ```
 
-### Step 3: Start the Backend Server
+### Step 3: Start -the Backend Server
 
 Open a terminal in the project root and run:
 
