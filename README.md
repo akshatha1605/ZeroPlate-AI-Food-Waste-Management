@@ -6,9 +6,9 @@ The project is built with a **strong backend-first approach** using Express.js a
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-### 🔐 Authentication & Authorization
+### Authentication & Authorization
 - OAuth2 (Google) login using Passport.js
 - JWT-based stateless authentication
 - Role-Based Access Control (RBAC):
@@ -17,7 +17,7 @@ The project is built with a **strong backend-first approach** using Express.js a
   - `volunteer` - Handles logistics and delivery
   - `admin` - Dashboard and analytics
 
-### 🍲 Food Donation System
+### Food Donation System
 - Donors can:
   - Create, update, and delete surplus food listings
 - Receivers can:
@@ -26,7 +26,7 @@ The project is built with a **strong backend-first approach** using Express.js a
 - Food lifecycle:
   - Available → Claimed → Picked Up
 
-### 🧠 Smart Matching Engine
+### Smart Matching Engine
 - Automatically recommends **nearest NGOs** for each donation
 - Matching criteria:
   - Location proximity (Google Maps Distance Matrix)
@@ -34,7 +34,7 @@ The project is built with a **strong backend-first approach** using Express.js a
   - Food type compatibility
   - Returns ranked NGO recommendations
 
-### ⏱️ Background Jobs & Scheduling
+### Background Jobs & Scheduling
 - Redis + Bull.js queues
 - Background workers handle:
   - Pickup reminders
@@ -42,7 +42,7 @@ The project is built with a **strong backend-first approach** using Express.js a
   - Periodic re-matching
 - node-cron used for scheduled jobs
 
-### 🚚 Volunteer Logistics Module
+### Volunteer Logistics Module
 - Volunteer role for delivery coordination
 - Admin assigns **multiple pickups** to volunteers
 - Google Maps Directions API used for:
@@ -50,7 +50,7 @@ The project is built with a **strong backend-first approach** using Express.js a
   - ETA calculation
   - Distance calculation
 
-### 📊 Analytics Dashboard (Admin)
+### Analytics Dashboard (Admin)
 - Aggregation-based analytics APIs:
   - Total donations and claims
   - Total meals saved
@@ -62,7 +62,7 @@ The project is built with a **strong backend-first approach** using Express.js a
   - Rapid multi-claims
   - Suspicious donors
 
-### 🔒 Security & Hardening
+### Security & Hardening
 - Helmet security headers
 - Global & route-specific rate limiting
 - NoSQL injection protection
@@ -72,7 +72,7 @@ The project is built with a **strong backend-first approach** using Express.js a
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 ### Backend
 | Component | Technology |
@@ -98,7 +98,7 @@ The project is built with a **strong backend-first approach** using Express.js a
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 - **Node.js** v18 or higher
 - **npm** or **yarn**
@@ -108,7 +108,7 @@ The project is built with a **strong backend-first approach** using Express.js a
 
 ---
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### Step 1: Install Dependencies
 
@@ -181,7 +181,7 @@ Once both servers are running, you can access:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ZeroPlate/
@@ -234,7 +234,7 @@ ZeroPlate/
 
 ---
 
-## 🧪 Testing the Application
+## Testing the Application
 
 ### Create an Account
 
@@ -260,7 +260,7 @@ ZeroPlate/
 
 ---
 
-## 🔧 API Configuration
+## API Configuration
 
 ### Frontend to Backend Communication
 
@@ -292,7 +292,7 @@ The application uses cookie-based authentication:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### CORS Errors
 - Make sure the backend CORS is configured to allow `http://localhost:4200`
@@ -342,7 +342,7 @@ kill -9 <PID>
 
 ---
 
-## 💡 Development Notes
+## Development Notes
 
 ### Frontend Development
 - The frontend uses **standalone components** (Angular 17 feature)
@@ -370,7 +370,7 @@ kill -9 <PID>
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [Express.js Documentation](https://expressjs.com/)
 - [Angular Documentation](https://angular.io/docs)
@@ -379,19 +379,19 @@ kill -9 <PID>
 
 ---
 
-## 📝 License
+## License
 
 ISC
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue.
 
 ---
 
-## 📧 Support
+## Support
 
 For issues and questions, please open an issue on the [GitHub repository](https://github.com/AyushMishraa/ZeroPlate).
 
